@@ -92,7 +92,7 @@ func searchSites(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if id == "demo" {
-		fmt.Fprintf(w, "Деменстрация microservice\n")
+		fmt.Fprintf(w, "Демонстрация microservice\n")
 	} else {
 		fmt.Fprintf(w, "/sites?search=%s\n", id)
 	}
