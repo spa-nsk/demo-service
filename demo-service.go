@@ -11,7 +11,12 @@ import (
 	"strings"
 	"time"
 
+	"sync/atomic"
+
 	"github.com/PuerkitoBio/goquery"
+	"github.com/fsnotify/fsnotify"
+	"github.com/spf13/viper"
+	"golang.org/x/net/context"
 )
 
 const baseYandexURL = "https://yandex.ru/search/touch/?service=www.yandex&ui=webmobileapp.yandex&numdoc=50&lr=213&p=0&text="
@@ -784,10 +789,10 @@ var tlds = map[string]struct{}{
 	"сайт":           {},
 }
 
-func checkAvailability(url string) (uint, time.Duration) {
-	var i, index uint
-	countRequest := uint(10)
-	timeOutRequest := time.Millisecond * 5000
+func checkAvailability(url string) (uint64, time.Duration) {
+	var i, index uint64
+	countRequest := atomic.LoadUint64(&CountRequest)
+	timeOutRequest := time.Millisecond * time.Duration(atomic.LoadUint64(&TimeOutRequest))
 	timeResponse := time.Millisecond * 0
 
 	ch := make(chan time.Duration)
@@ -839,7 +844,70 @@ func readUrl(url string, sec time.Duration, ch chan time.Duration) {
 	ch <- end.Sub(start)
 }
 
+var TimeOutRequest uint64
+var TimeOutWork uint64
+var CountRequest uint64
+
 func main() {
+
+	err0 := "Ошибка чтения конфигурационного файла: %w \n"
+	err1 := "Ошибка в параметре TimeOutRequest"
+	err2 := "Ошибка в параметре TimeOutWork"
+	err3 := "Ошибка в параметре CountRequest"
+
+	viper.SetConfigName("config") // имя конфигурационного файла без расширения
+	viper.SetConfigType("yaml")   // тип конфигурационного файла (если расширение не указано)
+	//viper.AddConfigPath("/etc/demo-service/")   // добавить путь для поиска конфигурационного файла
+	//viper.AddConfigPath("$HOME/.demo-service")  //
+	viper.AddConfigPath(".")    // путь для конфигурационного файла текущая папка
+	err := viper.ReadInConfig() //
+	if err != nil {
+		panic(fmt.Errorf(err0, err))
+	}
+
+	p1, ok := viper.Get("TimeOutRequest").(int)
+	if !ok {
+		panic(fmt.Errorf(err1))
+	}
+	p2, ok := viper.Get("TimeOutWork").(int)
+	if !ok {
+		panic(fmt.Errorf(err2))
+	}
+	p3, ok := viper.Get("CountRequest").(int)
+	if !ok {
+		panic(fmt.Errorf(err3))
+	}
+
+	TimeOutRequest = uint64(p1)
+	TimeOutWork = uint64(p2)
+	CountRequest = uint64(p3)
+
+	viper.OnConfigChange(func(e fsnotify.Event) {
+		fmt.Println("Конфигурационный файл", e.Name, "изменен. Обновление конфигурации")
+		err := viper.ReadInConfig() //
+		if err != nil {             //
+			panic(fmt.Errorf(err0, err))
+		}
+
+		p1, ok := viper.Get("TimeOutRequest").(int)
+		if !ok {
+			panic(fmt.Errorf(err1))
+		}
+		p2, ok := viper.Get("TimeOutWork").(int)
+		if !ok {
+			panic(fmt.Errorf(err2))
+		}
+		p3, ok := viper.Get("CountRequest").(int)
+		if !ok {
+			panic(fmt.Errorf(err3))
+		}
+		atomic.StoreUint64(&TimeOutRequest, uint64(p1))
+		atomic.StoreUint64(&TimeOutWork, uint64(p2))
+		atomic.StoreUint64(&CountRequest, uint64(p3))
+
+	})
+	viper.WatchConfig()
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("/sites", searchSites)
 
@@ -848,6 +916,14 @@ func main() {
 }
 
 func searchSites(w http.ResponseWriter, r *http.Request) {
+	timeOutRequest := time.Millisecond * time.Duration(atomic.LoadUint64(&TimeOutWork))
+	start := time.Now()
+	ctx, cancel := context.WithTimeout(context.Background(), timeOutRequest)
+	defer cancel()
+	defer func() {
+		end := time.Now()
+		fmt.Println("Время выполнения запроса", end.Sub(start))
+	}()
 	if r.Method != http.MethodGet {
 		w.Header().Set("Allow", http.MethodGet)
 		http.Error(w, http.StatusText(405), 405)
@@ -888,9 +964,16 @@ func searchSites(w http.ResponseWriter, r *http.Request) {
 	s := make(map[string]time.Duration)
 
 	for _, item := range res.Items {
-		count, timeResponse := checkAvailability(item.Url)
-		s[item.Host] = timeResponse
-		fmt.Println(item.Host, count, timeResponse)
+		select {
+		case <-ctx.Done():
+			fmt.Println("Time Out 30s")
+			json.NewEncoder(w).Encode(s)
+			return
+		default:
+			count, timeResponse := checkAvailability(item.Url)
+			s[item.Host] = timeResponse
+			fmt.Println(item.Host, count, timeResponse)
+		}
 	}
 	json.NewEncoder(w).Encode(s)
 }
