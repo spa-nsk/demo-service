@@ -966,7 +966,7 @@ func searchSites(w http.ResponseWriter, r *http.Request) {
 	for _, item := range res.Items {
 		select {
 		case <-ctx.Done():
-			fmt.Println("Time Out 30s")
+			fmt.Println("Истекло время выполнения запроса (", timeOutRequest, ").")
 			json.NewEncoder(w).Encode(s)
 			return
 		default:
