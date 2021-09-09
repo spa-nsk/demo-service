@@ -968,6 +968,7 @@ func searchSites(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(500), 500)
 		return
 	}
+
 	s := make(map[string]ResponseData)
 
 	for _, item := range res.Items {
