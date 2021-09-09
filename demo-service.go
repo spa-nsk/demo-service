@@ -19,6 +19,11 @@ import (
 	"golang.org/x/net/context"
 )
 
+type ResponseData struct {
+	ResponseCount uint64
+	TimeResponse  time.Duration
+}
+
 const baseYandexURL = "https://yandex.ru/search/touch/?service=www.yandex&ui=webmobileapp.yandex&numdoc=50&lr=213&p=0&text="
 
 type responseStruct struct {
@@ -963,7 +968,7 @@ func searchSites(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(500), 500)
 		return
 	}
-	s := make(map[string]time.Duration)
+	s := make(map[string]ResponseData)
 
 	for _, item := range res.Items {
 		select {
@@ -973,7 +978,7 @@ func searchSites(w http.ResponseWriter, r *http.Request) {
 			return
 		default:
 			count, timeResponse := checkAvailability(item.Url)
-			s[item.Host] = timeResponse
+			s[item.Host] = ResponseData{count, timeResponse}
 			fmt.Println(item.Host, count, timeResponse)
 		}
 	}
