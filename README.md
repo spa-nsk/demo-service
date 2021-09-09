@@ -1,4 +1,5 @@
 Микросервис для анализа доступности страниц
+
 Создать папку в вашей /home/username
 
 mkdir /home/username/demo-service
@@ -7,6 +8,7 @@ mkdir /home/username/demo-service
 редактировать файл Makefile, заменив username на имя вашей учетной записи
 
 make build
+
 make run
 
 сделать GET запрос на поинт http://127.0.0.1:8080/sites?search=строка для поиска на яндекс
