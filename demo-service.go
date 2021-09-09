@@ -31,6 +31,7 @@ type responseItem struct {
 	Url  string
 }
 
+// автор парсера parseYandexResponse https://github.com/kkhrychikov/revo-testing/blob/main/serp.go
 func parseYandexResponse(response []byte) (res responseStruct) {
 	res = responseStruct{Items: make([]responseItem, 0)}
 	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(response))
@@ -859,6 +860,7 @@ func main() {
 	viper.SetConfigType("yaml")   // тип конфигурационного файла (если расширение не указано)
 	//viper.AddConfigPath("/etc/demo-service/")   // добавить путь для поиска конфигурационного файла
 	//viper.AddConfigPath("$HOME/.demo-service")  //
+	viper.AddConfigPath("/opt/demo-service")
 	viper.AddConfigPath(".")    // путь для конфигурационного файла текущая папка
 	err := viper.ReadInConfig() //
 	if err != nil {
@@ -911,7 +913,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/sites", searchSites)
 
-	log.Println("Listening on :8080...")
+	log.Println("Слушаем порт :8080...")
 	http.ListenAndServe(":8080", mux)
 }
 
