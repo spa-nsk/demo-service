@@ -1,11 +1,11 @@
 Микросервис для анализа доступности страниц
 Создать папку в вашей /home/username
-...
+
 mkdir /home/username/demo-service
 
 клонировать репозитарий https:/github.com/spa-nsk/demo-service в созданную папку 
 редактировать файл Makefile, заменив username на имя вашей учетной записи
-...
+
 make build
 make run
 
