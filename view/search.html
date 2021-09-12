@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Сайты с данными</title>
+    </head>
+    <body>
+        <table>
+            <thead>
+                <th>Сайт</th>
+                <th>Количество ответов</th>
+                <th>Время доступа</th>
+            </thead>
+            {{range $key, $rec :=. }}
+            <tr>
+                <td>{{$key}}</td>
+                <td>{{$rec.ResponseCount}}</td>
+                <td>{{$rec.TimeResponse}}</td>
+            </tr>
+            {{end}}
+        </table>
+    </body>
+</html>
