@@ -2,20 +2,21 @@
 <html>
     <head>
         <meta charset="UTF-8">
-        <title>Сайты с данными</title>
+        <title>Сайты с данными, содержащими строку "{{.Title}}"</title>
+        <h2>Сайты с данными содержащими строку "{{.Title}}"</h2>
     </head>
     <body>
         <table>
             <thead>
-                <th>Сайт</th>
-                <th>Количество ответов</th>
-                <th>Время доступа</th>
+                <th><div style="width:250px;">Сайт</div></th>
+                <th><div align="right" style="width:150px;">Количество ответов</div></th>
+                <th><div align="right" style="width:160px;">Время доступа</div></th>
             </thead>
-            {{range $key, $rec :=. }}
+            {{range $key, $rec :=.Data }}
             <tr>
-                <td>{{$key}}</td>
-                <td>{{$rec.ResponseCount}}</td>
-                <td>{{$rec.TimeResponse}}</td>
+                <td><div style="width:250px;">{{$key}}</div></td>
+                <td><div align="right" style="width:150px;">{{$rec.ResponseCount}}</div></td>
+                <td><div align="right" style="width:160px;">{{$rec.TimeResponse}}</div></td>
             </tr>
             {{end}}
         </table>
