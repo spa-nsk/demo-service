@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"sync/atomic"
@@ -46,12 +45,12 @@ func readUrl(url string, sec time.Duration, ch chan time.Duration) {
 
 	if err != nil {
 		ch <- time.Second * 9999
-		fmt.Println("ошибка client.Get(", url, ") ", err)
+		//fmt.Println("ошибка client.Get(", url, ") ", err)
 		return
 	}
 	if resp.StatusCode == 429 { //слишком много запросов
 		ch <- time.Second * 9999
-		fmt.Println("Слишком много запросов", url)
+		//fmt.Println("Слишком много запросов", url)
 		return
 	}
 	defer resp.Body.Close()
@@ -59,7 +58,7 @@ func readUrl(url string, sec time.Duration, ch chan time.Duration) {
 	_ = body
 	if err != nil {
 		ch <- time.Second * 9999
-		fmt.Println("ошибка ioutil.ReadAll()", err)
+		//fmt.Println("ошибка ioutil.ReadAll()", err)
 		return
 	}
 	end := time.Now()

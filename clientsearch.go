@@ -47,7 +47,7 @@ func clientSearchSites(w http.ResponseWriter, r *http.Request) {
 
 	data := ClientData{Title: search,
 		Data: s}
-	tmpl, _ := template.ParseFiles("view/search.html")
+	tmpl, _ := template.ParseFiles("/opt/demo-service/view/search.html")
 	err = tmpl.Execute(w, &data)
 	if err != nil {
 		fmt.Println("Ошибка парсинга шаблона", err)
