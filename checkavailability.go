@@ -2,6 +2,7 @@ package main
 
 import (
 	"io/ioutil"
+	"net"
 	"net/http"
 	"sync/atomic"
 	"time"
@@ -38,8 +39,12 @@ func checkAvailability(url string) (uint64, time.Duration) {
 }
 
 func readUrl(url string, sec time.Duration, ch chan time.Duration) {
-	var defaultTtransport http.RoundTripper = &http.Transport{Proxy: nil}
-	client := &http.Client{Timeout: sec, Transport: defaultTtransport}
+	var defaultTtransport http.RoundTripper = &http.Transport{
+		Dial: (&net.Dialer{
+			Timeout:   sec,
+			KeepAlive: sec}).Dial,
+		TLSHandshakeTimeout: sec}
+	client := &http.Client{Transport: defaultTtransport}
 	start := time.Now()
 	resp, err := client.Get(url)
 

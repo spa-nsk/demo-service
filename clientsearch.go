@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"html/template"
 	"io/ioutil"
+	"net"
 	"net/http"
+	"sync/atomic"
+	"time"
 )
 
 func clientSearchSites(w http.ResponseWriter, r *http.Request) {
@@ -15,15 +18,23 @@ func clientSearchSites(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(405), 405)
 		return
 	}
+
 	search := r.URL.Query().Get("search")
+
 	if search == "" {
 		http.Error(w, http.StatusText(400), 400)
 		return
 	}
-	var defaultTtransport http.RoundTripper = &http.Transport{Proxy: nil}
+
+	var sec = time.Millisecond * time.Duration(atomic.LoadUint64(&TimeOutRequest))
+	var defaultTtransport http.RoundTripper = &http.Transport{
+		Dial: (&net.Dialer{
+			Timeout:   sec,
+			KeepAlive: sec}).Dial,
+		TLSHandshakeTimeout: sec}
 	client := &http.Client{Transport: defaultTtransport}
 
-	resp, err := client.Get("http://127.0.0.1:8080/sites?search=" + search)
+	resp, err := client.Get(ClientSearchPoint + search)
 
 	if err != nil {
 		http.Error(w, http.StatusText(500), 500)
